@@ -51,9 +51,9 @@ require(['angular'], function (angular) {
             };
         }])
 
-        .directive('socialAutocomplete', ['socialFinder', function (socialFinder) {
+        .directive('haSocialAutocomplete', ['socialFinder', function (socialFinder) {
             return {
-                scope: { link: '=socialAutocomplete' },
+                scope: { link: '=haSocialAutocomplete' },
                 template: '<div>' +
                     '<input data-ng-model="link.url">' +
                     '<div data-ng-repeat="provider in matches" data-ng-bind="provider.name"></div>' +
@@ -78,11 +78,41 @@ require(['angular'], function (angular) {
             };
         }])
 
+        .directive('haDraggable', ['$document', function ($document) {
+            return {
+                require: 'ngModel',
+                link: function ($scope, $element, $attrs, $ngModel) {
+                    var initPosition,
+                        move = function (event) {
+                            $scope.$apply(function () {
+                                var currentPosition = $ngModel.$modelValue,
+                                    dx = event.clientX - initPosition.x ,
+                                    dy = event.clientY - initPosition.y;
+
+                                $ngModel.$setViewValue({ x: currentPosition.x + dx, y : currentPosition.y + dy });
+                                initPosition = { x: event.clientX, y : event.clientY };
+                            });
+                        };
+
+                    $element.on('mousedown', function (event) {
+                        initPosition = { x: event.clientX, y : event.clientY };
+                        $document.on('mousemove', move);
+                    });
+
+                    $element.on('mouseup', function () {
+                        $document.off('mousemove', move);
+                    });
+                }
+            };
+        }])
+
         .controller('linksController', ['$scope', function ($scope) {
-            //TODO retrieve user links from the server
-            $scope.links = [];
+            $scope.links = [ { position: { x: 10, y: 10 }, url: 'felix'} ];
             $scope.addLink = function () {
-                $scope.links.push({});
+                var link = {
+                    position: { x: 0, y: 0 }
+                };
+                $scope.links.push(link);
             };
         }]);
 

@@ -5,9 +5,10 @@ block content
         form
             div(data-ng-repeat="link in links")
                 label link
-                div(data-social-autocomplete="link")
+                div(data-ha-social-autocomplete="link")
             button(type="button", data-ng-click="addLink()") +
 
         div#main
             div(data-ng-repeat="link in links")
-                a(data-ng-class="link.provider.id", data-ng-href="{{link.url}}", data-ng-bind="link.url")
+                div.physical-element(data-ha-draggable, data-ng-model="link.position", data-ng-style="{ top: link.position.y + 'px', left: link.position.x + 'px' }")
+                    div.link(data-ng-class="link.provider.id", data-ng-href="{{link.url}}", data-ng-bind="link.url")
