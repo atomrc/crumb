@@ -95,11 +95,16 @@ require(['angular'], function (angular) {
                         };
 
                     $element.on('mousedown', function (event) {
+                        //if the user is already dragging. Meaning we failed to catch a mouseup
+                        //could happens if the user clicks outside the document
+                        if (initPosition) { return; }
                         initPosition = { x: event.clientX, y : event.clientY };
                         $document.on('mousemove', move);
+                        event.preventDefault();
                     });
 
-                    $element.on('mouseup', function () {
+                    $document.on('mouseup', function () {
+                        initPosition = null;
                         $document.off('mousemove', move);
                     });
                 }
