@@ -1,32 +1,101 @@
-/*global require*/
+/*global require, window*/
 
 require.config({
     paths: {
-        angular: "//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min"
+        angular: "//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min",
+        g: "//blog.thomasbelin.fr/g.js/js/build/g.min"
     },
 
     shim: {
         angular: {
-            exports: 'angular'
+            exports: "angular"
         }
     }
 });
 
-require(['angular'], function (angular) {
-    'use strict';
+require(["angular", "g"], function (angular, G) {
+    "use strict";
+
     angular
-        .module('hereiam', [])
+        .module("g.js", [])
+        .service("gManager", function () {
+            return {
+                points: [],
+                container: null,
+
+                run: function () {
+                    if (!this.container) {
+                        this.container = new G.Container();
+                        this.container.forces.push(new G.GlobalForce(0, 0.5));
+                    }
+
+                    this.container.points = this.points;
+                    if (this.container.isRunning()) {
+                        return this.container.restart();
+                    }
+                    this.container.run();
+                },
+
+                pause: function () {
+                    if (!this.container.isRunning()) {
+                        return this.container.resume();
+                    }
+                    this.container.pause();
+                },
+
+                createPoint: function (params, render) {
+                    var point = new G.Point(params, render);
+                    return point;
+                },
+
+                addPoint: function (point) {
+                    this.points.push(point);
+                }
+            };
+        })
+        .directive("gContainer", ["gManager", function (gManager) {
+            return function ($scope, $element) {
+                $scope.run = function () {
+                    gManager.run();
+                };
+
+                $scope.pause = function () {
+                    gManager.pause();
+                };
+            };
+        }])
+
+        .directive("gElement", ["gManager", function (gManager) {
+            return function ($scope, $element, $attrs) {
+                var point = gManager.createPoint({ x: 0, y: 0 }, function () {
+                    $element.css("top", this.position.y + "px");
+                    $element.css("left", this.position.x + "px");
+                });
+
+                $scope.$watch($attrs.gElement, function (val) {
+                    point.position.x = val.x;
+                    point.position.y = val.y;
+                }, true);
+
+                gManager.addPoint(point);
+
+            };
+        }]);
+
+
+    angular
+        .module("hereiam", ["g.js"])
 
         /**
          * all the social providers supported by the application
          *
          * @return Object
          */
-        .value('socialProviders', [
-            { id: 'github',  name: 'Github', pattern: 'http://github.com/' },
-            { id: 'twitter', name: 'Twitter', pattern: 'http://twitter.com/' },
-            { id: 'googleplus', name: 'Google+', pattern: 'http://plus.google.com/' },
-            { id: 'facebook', name: 'Facebook', pattern: 'http://facebook.com/' }
+        .value("socialProviders", [
+            { id: "github",  name: "Github", pattern: "http://github.com/" },
+            { id: "twitter", name: "Twitter", pattern: "http://twitter.com/" },
+            { id: "googleplus", name: "Google+", pattern: "http://plus.google.com/" },
+            { id: "facebook", name: "Facebook", pattern: "http://facebook.com/" }
         ])
 
         /**
@@ -34,7 +103,7 @@ require(['angular'], function (angular) {
          *
          * @return Object
          */
-        .factory('socialFinder', ['socialProviders', function (providers) {
+        .factory("socialFinder", ["socialProviders", function (providers) {
             return {
                 find: function (val) {
                     var matches = [];
@@ -51,17 +120,17 @@ require(['angular'], function (angular) {
             };
         }])
 
-        .directive('haSocialAutocomplete', ['socialFinder', function (socialFinder) {
+        .directive("haSocialAutocomplete", ["socialFinder", function (socialFinder) {
             return {
-                scope: { link: '=haSocialAutocomplete' },
-                template: '<div>' +
-                    '<input data-ng-model="link.url">' +
-                    '<div data-ng-repeat="provider in matches" data-ng-bind="provider.name"></div>' +
-                '</div>',
+                scope: { link: "=haSocialAutocomplete" },
+                template: "<div>" +
+                    "<input data-ng-model=\"link.url\">" +
+                    "<div data-ng-repeat=\"provider in matches\" data-ng-bind=\"provider.name\"></div>" +
+                "</div>",
                 link: function ($scope/*, $element, $attrs*/) {
                     $scope.matches = [];
 
-                    $scope.$watch('link.url', function (val) {
+                    $scope.$watch("link.url", function (val) {
                         var matches = [];
                         $scope.matches = [];
                         $scope.link.provider = null;
@@ -78,9 +147,9 @@ require(['angular'], function (angular) {
             };
         }])
 
-        .directive('haDraggable', ['$document', function ($document) {
+        .directive("haDraggable", ["$document", function ($document) {
             return {
-                require: 'ngModel',
+                require: "ngModel",
                 link: function ($scope, $element, $attrs, $ngModel) {
                     var initPosition,
                         move = function (event) {
@@ -94,25 +163,25 @@ require(['angular'], function (angular) {
                             });
                         };
 
-                    $element.on('mousedown', function (event) {
+                    $element.on("mousedown", function (event) {
                         //if the user is already dragging. Meaning we failed to catch a mouseup
                         //could happens if the user clicks outside the document
                         if (initPosition) { return; }
                         initPosition = { x: event.clientX, y : event.clientY };
-                        $document.on('mousemove', move);
+                        $document.on("mousemove", move);
                         event.preventDefault();
                     });
 
-                    $document.on('mouseup', function () {
+                    $document.on("mouseup", function () {
                         initPosition = null;
-                        $document.off('mousemove', move);
+                        $document.off("mousemove", move);
                     });
                 }
             };
         }])
 
-        .controller('linksController', ['$scope', function ($scope) {
-            $scope.links = [ { position: { x: 10, y: 10 }, url: 'felix'} ];
+        .controller("linksController", ["$scope", function ($scope) {
+            $scope.links = [ { position: { x: 10, y: 10 }, url: "felix"} ];
             $scope.addLink = function () {
                 var link = {
                     position: { x: 0, y: 0 }
@@ -121,5 +190,5 @@ require(['angular'], function (angular) {
             };
         }]);
 
-    angular.bootstrap(window.document.body, ['hereiam']);
+    angular.bootstrap(window.document.body, ["hereiam"]);
 });
