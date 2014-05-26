@@ -149,19 +149,34 @@ require(["angular", "g"], function (angular, G) {
 
         .directive("haDraggable", ["$document", function ($document) {
             return {
-                require: "ngModel",
+                require: "?ngModel",
                 link: function ($scope, $element, $attrs, $ngModel) {
                     var initPosition,
+                        position = { x: 0, y: 0 },
                         move = function (event) {
+                            event.preventDefault();
                             $scope.$apply(function () {
-                                var currentPosition = $ngModel.$modelValue,
-                                    dx = event.clientX - initPosition.x ,
+                                var dx = event.clientX - initPosition.x ,
                                     dy = event.clientY - initPosition.y;
 
-                                $ngModel.$setViewValue({ x: currentPosition.x + dx, y : currentPosition.y + dy });
+                                position.x += dx;
+                                position.y += dy;
+
+                                if ($ngModel) {
+                                    $ngModel.$setViewValue(position);
+                                }
+                                $element.css({ top: position.y + "px", left: position.x + "px" });
                                 initPosition = { x: event.clientX, y : event.clientY };
                             });
                         };
+
+                    if ($ngModel) {
+                        $ngModel.$render = function () {
+                            position = $ngModel.$modelValue;
+                        };
+                    }
+
+                    $element.css({ position: 'absolute' });
 
                     $element.on("mousedown", function (event) {
                         //if the user is already dragging. Meaning we failed to catch a mouseup
@@ -169,7 +184,6 @@ require(["angular", "g"], function (angular, G) {
                         if (initPosition) { return; }
                         initPosition = { x: event.clientX, y : event.clientY };
                         $document.on("mousemove", move);
-                        event.preventDefault();
                     });
 
                     $document.on("mouseup", function () {
