@@ -43,7 +43,9 @@ require(["angular", "g"], function (angular, G) {
                         position: {
                             x: link.physics.position.x,
                             y: link.physics.position.y
-                        }
+                        },
+                        staticFriction: 0.1,
+                        kineticFriction: 0.99
                     }, renderFn);
 
                     for (var i in link.physics.elastics) {
@@ -72,9 +74,11 @@ require(["angular", "g"], function (angular, G) {
             return {
                 link: function ($scope, $element, $attrs) {
                     var element = null;
+
                     $scope.$watch($attrs.gElement, function (val) {
                         element = val;
                     }, true);
+
                     $scope.$on("gContainer:run", function () {
                         if (!element) { return; }
                         var point = gManager.pointFromLink(element, function () {
@@ -154,32 +158,29 @@ require(["angular", "g"], function (angular, G) {
 
         .directive("haDraggable", ["$document", function ($document) {
             return {
-                require: "?ngModel",
+                require: "ngModel",
                 link: function ($scope, $element, $attrs, $ngModel) {
                     var initPosition,
-                        position = { x: 0, y: 0 },
                         move = function (event) {
                             event.preventDefault();
                             $scope.$apply(function () {
-                                var dx = event.clientX - initPosition.x,
+                                var currentPosition = $ngModel.$modelValue,
+                                    dx = event.clientX - initPosition.x,
                                     dy = event.clientY - initPosition.y;
 
-                                position.x += dx;
-                                position.y += dy;
-
-                                if ($ngModel) {
-                                    $ngModel.$setViewValue(position);
-                                }
-                                $element.css({ top: position.y + "px", left: position.x + "px" });
+                                $ngModel.$setViewValue({
+                                    x: currentPosition.x + dx,
+                                    y: currentPosition.y + dy
+                                });
                                 initPosition = { x: event.clientX, y : event.clientY };
+                                $ngModel.$render();
                             });
                         };
 
-                    if ($ngModel) {
-                        $ngModel.$render = function () {
-                            position = $ngModel.$modelValue || position;
-                        };
-                    }
+                    $ngModel.$render = function () {
+                        if (!$ngModel.$modelValue) { return; }
+                        $element.css({ top: $ngModel.$modelValue.y + "px", left: $ngModel.$modelValue.x + "px" });
+                    };
 
                     $element.css({ position: 'absolute' });
 
@@ -220,7 +221,7 @@ require(["angular", "g"], function (angular, G) {
 
             $scope.links = [];
             $scope.addLink = function () {
-                var link = angular.extend({}, defaultLink);
+                var link = angular.copy(defaultLink);
                 console.log(link);
                 $scope.links.push(link);
             };
