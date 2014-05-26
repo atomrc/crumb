@@ -1,15 +1,28 @@
+html { height: 100% }
 body {
   font: 14pt "Lucida Grande", Helvetica, Arial, sans-serif;
   background-color: #EEE;
+  height: 100%;
+  padding: 0;
+  margin: 0;
 }
 
 a {
   color: #00B7FF;
 }
 
+#container { height: 100%; }
 #main {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
+
+.link-form {
+    position: relative;
+    top: 50%;
+}
+
 .physical-element {
     position: absolute;
 }

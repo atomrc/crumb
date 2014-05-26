@@ -19,66 +19,71 @@ require(["angular", "g"], function (angular, G) {
     angular
         .module("g.js", [])
         .service("gManager", function () {
+            var container = new G.Container();
+
+            container.points = [];
+            container.forces.push(new G.GlobalForce(0, 0.5));
+
             return {
-                points: [],
-                container: null,
+                reset: function () {
+                    container.points.length = 0;
+                },
 
                 run: function () {
-                    if (!this.container) {
-                        this.container = new G.Container();
-                        this.container.forces.push(new G.GlobalForce(0, 0.5));
+                    if (container.isRunning()) {
+                        container.pause();
+                        return container.reset();
                     }
-
-                    this.container.points = this.points;
-                    if (this.container.isRunning()) {
-                        return this.container.restart();
-                    }
-                    this.container.run();
+                    container.run();
+                    container.resume();
                 },
 
-                pause: function () {
-                    if (!this.container.isRunning()) {
-                        return this.container.resume();
-                    }
-                    this.container.pause();
-                },
+                pointFromLink: function (link, renderFn) {
+                    var point = new G.Point({
+                        position: {
+                            x: link.physics.position.x,
+                            y: link.physics.position.y
+                        }
+                    }, renderFn);
 
-                createPoint: function (params, render) {
-                    var point = new G.Point(params, render);
+                    for (var i in link.physics.elastics) {
+                        point.forces.push(new G.CenteredForce(link.physics.elastics[i]));
+                    }
                     return point;
                 },
 
                 addPoint: function (point) {
-                    this.points.push(point);
+                    container.points.push(point);
                 }
             };
         })
-        .directive("gContainer", ["gManager", function (gManager) {
-            return function ($scope, $element) {
-                $scope.run = function () {
-                    gManager.run();
-                };
 
-                $scope.pause = function () {
-                    gManager.pause();
+        .directive("gContainer", ["gManager", function (gManager) {
+            return function ($scope, $element, $attrs) {
+                $scope.run = function () {
+                    gManager.reset();
+                    $scope.$broadcast("gContainer:run");
+                    gManager.run();
                 };
             };
         }])
 
         .directive("gElement", ["gManager", function (gManager) {
-            return function ($scope, $element, $attrs) {
-                var point = gManager.createPoint({ x: 0, y: 0 }, function () {
-                    $element.css("top", this.position.y + "px");
-                    $element.css("left", this.position.x + "px");
-                });
-
-                $scope.$watch($attrs.gElement, function (val) {
-                    point.position.x = val.x;
-                    point.position.y = val.y;
-                }, true);
-
-                gManager.addPoint(point);
-
+            return {
+                link: function ($scope, $element, $attrs) {
+                    var element = null;
+                    $scope.$watch($attrs.gElement, function (val) {
+                        element = val;
+                    }, true);
+                    $scope.$on("gContainer:run", function () {
+                        if (!element) { return; }
+                        var point = gManager.pointFromLink(element, function () {
+                            $element.css("top", this.position.y + "px");
+                            $element.css("left", this.position.x + "px");
+                        })
+                        gManager.addPoint(point);
+                    });
+                }
             };
         }]);
 
@@ -156,7 +161,7 @@ require(["angular", "g"], function (angular, G) {
                         move = function (event) {
                             event.preventDefault();
                             $scope.$apply(function () {
-                                var dx = event.clientX - initPosition.x ,
+                                var dx = event.clientX - initPosition.x,
                                     dy = event.clientY - initPosition.y;
 
                                 position.x += dx;
@@ -172,7 +177,7 @@ require(["angular", "g"], function (angular, G) {
 
                     if ($ngModel) {
                         $ngModel.$render = function () {
-                            position = $ngModel.$modelValue;
+                            position = $ngModel.$modelValue || position;
                         };
                     }
 
@@ -195,11 +200,28 @@ require(["angular", "g"], function (angular, G) {
         }])
 
         .controller("linksController", ["$scope", function ($scope) {
-            $scope.links = [ { position: { x: 10, y: 10 }, url: "felix"} ];
+            var defaultLink = {
+                url: "felix",
+                physics: {
+                    position: {
+                        x: 10,
+                        y: 10
+                    },
+                    elastics: [{
+                        center: {
+                            x: 100,
+                            y: 100
+                        },
+                        stiffness: 0.01,
+                        offset: 100
+                    }]
+                }
+            };
+
+            $scope.links = [];
             $scope.addLink = function () {
-                var link = {
-                    position: { x: 0, y: 0 }
-                };
+                var link = angular.extend({}, defaultLink);
+                console.log(link);
                 $scope.links.push(link);
             };
         }]);

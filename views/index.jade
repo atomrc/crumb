@@ -1,18 +1,17 @@
 extends layout
 
 block content
-    div(data-ng-controller="linksController")
-        div#main(data-g-container)
-            button(data-ng-click="run()") run
-            button(data-ng-click="pause()") pause
-            div(data-ng-repeat="link in links")
-                div.physical-element(data-ha-draggable, data-g-element="link.position", data-ng-model="link.position")
-                    div.link(data-ng-class="link.provider.id", data-ng-href="{{link.url}}", data-ng-bind="link.url")
-                    span.type(data-ng-bind="link.provider.id")
-
-        form(data-ha-draggable)
+    div#container(data-ng-controller="linksController")
+        form.link-form
             div(data-ng-repeat="link in links")
                 label link
                 div(data-ha-social-autocomplete="link")
             button(type="button", data-ng-click="addLink()") +
+
+        div#main(data-g-container)
+            button(data-ng-click="run()") run
+            div(data-ng-repeat="link in links")
+                div.physical-element(data-ha-draggable, data-g-element="link", data-ng-model="link.physics.position")
+                    div.link(data-ng-class="link.provider.id", data-ng-href="{{link.url}}", data-ng-bind="link.url")
+                    span.type(data-ng-bind="link.provider.id")
 
