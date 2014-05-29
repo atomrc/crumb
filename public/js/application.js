@@ -98,21 +98,36 @@ require(["angular", "g"], function (angular, G) {
         .service("usher", ["$window", function ($window) {
             var area = $window.document.body.getBoundingClientRect(),
                 dx = 200,
-                dy = 200;
+                dy = 200,
+                defaultElastic = {
+                    center: {
+                        x: 100,
+                        y: 100
+                    },
+                    stiffness: 0.01,
+                    offset: 100
+                };
 
             return {
                 /**
-                 * getPosition - return coordinate of the `index`th point to place
+                 * generatePosition - return coordinate of the `index`th point to place
                  * in the selected placement pattern
                  *
                  * @param index
                  * @return {Object} : {x: <>, y: <>}
                  */
-                getPosition: function (index) {
+                generatePosition: function (index) {
                     var x = (index * dx) % area.width,
                         y = dy * Math.floor((index * dx) / area.width);
 
                     return { x: x, y: y };
+                },
+
+                generateElastic: function (position) {
+                    var elastic = angular.copy(defaultElastic);
+                    elastic.center.x = position.x + 200;
+                    elastic.center.y = position.y + 200;
+                    return elastic;
                 }
             };
         }])
@@ -122,18 +137,8 @@ require(["angular", "g"], function (angular, G) {
                 defaultLink = {
                     url: "",
                     physics: {
-                        position: {
-                            x: 0,
-                            y: 0
-                        },
-                        elastics: [{
-                            center: {
-                                x: 100,
-                                y: 100
-                            },
-                            stiffness: 0.01,
-                            offset: 100
-                        }]
+                        position: { x: 0, y: 0 },
+                        elastics: []
                     }
                 };
 
@@ -166,8 +171,8 @@ require(["angular", "g"], function (angular, G) {
                  * @return
                  */
                 addLink: function (link) {
-                    var position = usher.getPosition(links.length);
-                    link.physics.position = position;
+                    link.physics.position = usher.generatePosition(links.length);
+                    link.physics.elastics.push(usher.generateElastic(link.physics.position));
                     links.push(link);
                     return this;
                 },
