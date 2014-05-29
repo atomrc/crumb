@@ -101,10 +101,11 @@ require(["angular", "g"], function (angular, G) {
          * @return Object
          */
         .value("socialProviders", [
-            { id: "github",  name: "Github", pattern: "http://github.com/" },
-            { id: "twitter", name: "Twitter", pattern: "http://twitter.com/" },
-            { id: "googleplus", name: "Google+", pattern: "http://plus.google.com/" },
-            { id: "facebook", name: "Facebook", pattern: "http://facebook.com/" }
+            { id: "default",  name: "Perso", color: "orange" },
+            { id: "github",  name: "Github", color: "rgba(65, 131, 196, 1)" },
+            { id: "twitter", name: "Twitter", color: "#0084B4" },
+            { id: "googleplus", name: "Google+", color: "#D73D32" },
+            { id: "facebook", name: "Facebook", color: "#4B67A8" }
         ])
 
         /**
@@ -123,6 +124,9 @@ require(["angular", "g"], function (angular, G) {
                             matches.push(provider);
                         }
                     });
+                    if (matches.length === 0) {
+                        matches.push(providers[0]);
+                    }
 
                     return matches;
                 }
@@ -222,7 +226,6 @@ require(["angular", "g"], function (angular, G) {
             $scope.links = [];
             $scope.addLink = function () {
                 var link = angular.copy(defaultLink);
-                console.log(link);
                 $scope.links.push(link);
             };
         }]);

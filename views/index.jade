@@ -11,7 +11,6 @@ block content
         div#main(data-g-container)
             button(data-ng-click="run()") run
             div(data-ng-repeat="link in links")
-                div.physical-element(data-ha-draggable, data-g-element="link", data-ng-model="link.physics.position")
-                    div.link(data-ng-class="link.provider.id", data-ng-href="{{link.url}}", data-ng-bind="link.url")
-                    span.type(data-ng-bind="link.provider.id")
+                div.physical-element(data-ha-draggable, data-ng-style="{ 'background-color': link.provider.color}", data-g-element="link", data-ng-model="link.physics.position")
+                    div.link(data-ng-class="link.provider.id", data-ng-href="{{link.url}}", title="{{link.provider.name}}" data-ng-bind="link.url")
 
