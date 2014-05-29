@@ -95,6 +95,95 @@ require(["angular", "g"], function (angular, G) {
     angular
         .module("hereiam", ["g.js"])
 
+        .service("usher", ["$window", function ($window) {
+            var area = $window.document.body.getBoundingClientRect(),
+                dx = 200,
+                dy = 200;
+
+            return {
+                /**
+                 * getPosition - return coordinate of the `index`th point to place
+                 * in the selected placement pattern
+                 *
+                 * @param index
+                 * @return {Object} : {x: <>, y: <>}
+                 */
+                getPosition: function (index) {
+                    var x = (index * dx) % area.width,
+                        y = dy * Math.floor((index * dx) / area.width);
+
+                    return { x: x, y: y };
+                }
+            };
+        }])
+
+        .service("linkManager", ["usher", function (usher) {
+            var links = [],
+                defaultLink = {
+                    url: "",
+                    physics: {
+                        position: {
+                            x: 0,
+                            y: 0
+                        },
+                        elastics: [{
+                            center: {
+                                x: 100,
+                                y: 100
+                            },
+                            stiffness: 0.01,
+                            offset: 100
+                        }]
+                    }
+                };
+
+            return {
+                /**
+                 * getLinks - return the list of all the links
+                 *
+                 * @return
+                 */
+                getLinks: function () {
+                    return links;
+                },
+
+                /**
+                 * createLink - create a empty link
+                 *
+                 * @param url - the url to set to the link
+                 * @return link
+                 */
+                createLink: function (url) {
+                    var newLink = angular.copy(defaultLink);
+                    newLink.url = url || newLink.url;
+                    return newLink;
+                },
+
+                /**
+                 * addLink - add link to the list of links
+                 *
+                 * @param link
+                 * @return
+                 */
+                addLink: function (link) {
+                    var position = usher.getPosition(links.length);
+                    link.physics.position = position;
+                    links.push(link);
+                    return this;
+                },
+
+                /**
+                 * removeLink - remove a link form the list
+                 *
+                 * @param link
+                 * @return
+                 */
+                removeLink: function (link) {
+                    return link;
+                }
+            };
+        }])
+
         /**
          * all the social providers supported by the application
          *
@@ -204,34 +293,28 @@ require(["angular", "g"], function (angular, G) {
             };
         }])
 
-        .controller("linksController", ["$scope", function ($scope) {
-            var defaultLink = {
-                url: "felix",
-                physics: {
-                    position: {
-                        x: 10,
-                        y: 10
-                    },
-                    elastics: [{
-                        center: {
-                            x: 100,
-                            y: 100
-                        },
-                        stiffness: 0.01,
-                        offset: 100
-                    }]
-                }
-            };
+        .controller("linksController", ["$scope", "linkManager", function ($scope, linkManager) {
+            $scope.links = linkManager.getLinks();
 
-            $scope.links = [];
             $scope.selectLink = function (link) {
                 $scope.selectedLink = link;
             };
+
             $scope.createLink = function () {
-                var link = angular.copy(defaultLink);
+                var link = linkManager.createLink();
+                linkManager.addLink(link);
                 this.selectLink(link);
-                this.links.push(link);
             };
+        }])
+
+        .run(["$rootScope", "$window", "linkManager", function ($scope, $window, linkManager) {
+            //automatically create and add a new link when a user paste smthing
+            $window.addEventListener("paste", function (event) {
+                var link = linkManager.createLink(event.clipboardData.getData("text/plain"));
+                $scope.$apply(function () {
+                    linkManager.addLink(link);
+                });
+            });
         }]);
 
     angular.bootstrap(window.document.body, ["hereiam"]);
