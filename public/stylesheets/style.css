@@ -18,9 +18,11 @@ a {
     left: 0;
 }
 
-.link-form {
-    position: relative;
-    top: 50%;
+#edit-form {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 20px;
 }
 
 .physical-element {
@@ -29,4 +31,10 @@ a {
     background-color: orange;
     border-radius: 50px;
     position: absolute;
+}
+
+.elastic {
+    height: 10px;
+    width: 10px;
+    background-color: red;
 }

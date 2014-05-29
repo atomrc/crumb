@@ -2,15 +2,23 @@ extends layout
 
 block content
     div#container(data-ng-controller="linksController")
-        form.link-form
-            div(data-ng-repeat="link in links")
-                label link
-                div(data-ha-social-autocomplete="link")
-            button(type="button", data-ng-click="addLink()") +
-
         div#main(data-g-container)
             button(data-ng-click="run()") run
-            div(data-ng-repeat="link in links")
+            button(data-ng-click="createLink()") Add link
+            div(data-ng-repeat="link in links", data-ng-click="selectLink(link);")
+                div.elastic(data-ng-repeat="elastic in link.physics.elastics", data-ng-style="{ top: elastic.center.y + 'px', left: elastic.center.x + 'px'}", data-ng-if="link === selectedLink", data-ha-draggable="", data-ng-model="elastic.center")
                 div.physical-element(data-ha-draggable, data-ng-style="{ 'background-color': link.provider.color}", data-g-element="link", data-ng-model="link.physics.position")
                     div.link(data-ng-class="link.provider.id", data-ng-href="{{link.url}}", title="{{link.provider.name}}" data-ng-bind="link.url")
 
+        div#edit-form(data-ng-if="selectedLink")
+            form
+                label Url
+                div(data-ha-social-autocomplete="selectedLink")
+                a(href="#") physical properties
+                div
+                    input(data-ng-model="selectedLink.physics.position.x", type="number")
+                    input(data-ng-model="selectedLink.physics.position.y", type="number")
+                    div(data-ng-repeat="elastic in selectedLink.physics.elastics")
+                        input(data-ng-model="elastic.center.x")
+                        input(data-ng-model="elastic.center.y")
+                        input(data-ng-model="elastic.offset")

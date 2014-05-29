@@ -84,7 +84,7 @@ require(["angular", "g"], function (angular, G) {
                         var point = gManager.pointFromLink(element, function () {
                             $element.css("top", this.position.y + "px");
                             $element.css("left", this.position.x + "px");
-                        })
+                        });
                         gManager.addPoint(point);
                     });
                 }
@@ -186,7 +186,7 @@ require(["angular", "g"], function (angular, G) {
                         $element.css({ top: $ngModel.$modelValue.y + "px", left: $ngModel.$modelValue.x + "px" });
                     };
 
-                    $element.css({ position: 'absolute' });
+                    $element.css({ position: "absolute" });
 
                     $element.on("mousedown", function (event) {
                         //if the user is already dragging. Meaning we failed to catch a mouseup
@@ -224,9 +224,13 @@ require(["angular", "g"], function (angular, G) {
             };
 
             $scope.links = [];
-            $scope.addLink = function () {
+            $scope.selectLink = function (link) {
+                $scope.selectedLink = link;
+            };
+            $scope.createLink = function () {
                 var link = angular.copy(defaultLink);
-                $scope.links.push(link);
+                this.selectLink(link);
+                this.links.push(link);
             };
         }]);
 
