@@ -2,6 +2,7 @@ extends layout
 
 block content
     div#container(data-ng-controller="linksController")
+        canvas#drawing-board
         div#main(data-g-container)
             button(data-ng-click="run()") run
             button(data-ng-click="createLink()") Add link
@@ -10,15 +11,24 @@ block content
                 div.physical-element(data-ha-draggable, data-ng-style="{ 'background-color': link.provider.color}", data-g-element="link", data-ng-model="link.physics.position")
                     div.link(data-ng-class="link.provider.id", data-ng-href="{{link.url}}", title="{{link.provider.name}}" data-ng-bind="link.url")
 
-        div#edit-form(data-ng-if="selectedLink")
-            form
-                label Url
-                div(data-ha-social-autocomplete="selectedLink")
-                a(href="#") physical properties
-                div
-                    input(data-ng-model="selectedLink.physics.position.x", type="number")
-                    input(data-ng-model="selectedLink.physics.position.y", type="number")
-                    div(data-ng-repeat="elastic in selectedLink.physics.elastics")
-                        input(data-ng-model="elastic.center.x", type="number")
-                        input(data-ng-model="elastic.center.y", type="number")
-                        input(data-ng-model="elastic.offset", type="number")
+        div#edit-form
+            section#edit-global
+                form(data-ng-controller="usherController")
+                    input(data-ng-model="config.dx")
+                    input(data-ng-model="config.dy")
+                    li background image
+                    li usher strategy
+                    li usher distances config
+                    li usher elastic distances config
+            section#edit-link(data-ng-if="selectedLink")
+                form
+                    label Url
+                    div(data-ha-social-autocomplete="selectedLink")
+                    a(href="#") physical properties
+                    div
+                        input(data-ng-model="selectedLink.physics.position.x", type="number")
+                        input(data-ng-model="selectedLink.physics.position.y", type="number")
+                        div(data-ng-repeat="elastic in selectedLink.physics.elastics")
+                            input(data-ng-model="elastic.center.x", type="number")
+                            input(data-ng-model="elastic.center.y", type="number")
+                            input(data-ng-model="elastic.offset", type="number")

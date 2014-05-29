@@ -18,9 +18,18 @@ a {
     left: 0;
 }
 
-#edit-form {
+#drawing-board {
     position: absolute;
-    bottom: 0;
+    height: 100%;
+    width: 100%;
+}
+
+#edit-form {
+    background-color: black;
+    height: 100%;
+    color: #EEE;
+    position: absolute;
+    top: 0;
     right: 0;
     padding: 20px;
 }

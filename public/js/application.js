@@ -97,8 +97,10 @@ require(["angular", "g"], function (angular, G) {
 
         .service("usher", ["$window", function ($window) {
             var area = $window.document.body.getBoundingClientRect(),
-                dx = 200,
-                dy = 200,
+                config = {
+                    dx: 200,
+                    dy: 200
+                },
                 defaultElastic = {
                     center: {
                         x: 100,
@@ -109,6 +111,10 @@ require(["angular", "g"], function (angular, G) {
                 };
 
             return {
+                getConfig: function () {
+                    return config;
+                },
+
                 /**
                  * generatePosition - return coordinate of the `index`th point to place
                  * in the selected placement pattern
@@ -117,8 +123,8 @@ require(["angular", "g"], function (angular, G) {
                  * @return {Object} : {x: <>, y: <>}
                  */
                 generatePosition: function (index) {
-                    var x = (index * dx) % area.width,
-                        y = dy * Math.floor((index * dx) / area.width);
+                    var x = (index * config.dx) % area.width,
+                        y = config.dy * Math.floor((index * config.dx) / area.width);
 
                     return { x: x, y: y };
                 },
@@ -174,6 +180,21 @@ require(["angular", "g"], function (angular, G) {
                     link.physics.position = usher.generatePosition(links.length);
                     link.physics.elastics.push(usher.generateElastic(link.physics.position));
                     links.push(link);
+                    return this;
+                },
+
+                /**
+                 * repositionAll - recompute all the positions of the links
+                 *
+                 * @return
+                 */
+                repositionAll: function () {
+                    for (var i in links) {
+                        var link = links[i];
+                        link.physics.position = usher.generatePosition(i);
+                        link.physics.elastics.length = 0;
+                        link.physics.elastics.push(usher.generateElastic(link.physics.position));
+                    }
                     return this;
                 },
 
@@ -310,6 +331,13 @@ require(["angular", "g"], function (angular, G) {
                 linkManager.addLink(link);
                 this.selectLink(link);
             };
+        }])
+
+        .controller("usherController", ["$scope", "usher", "linkManager", function ($scope, usher, linkManager) {
+            $scope.config = usher.getConfig();
+            $scope.$watch("config", function () {
+                linkManager.repositionAll();
+            }, true);
         }])
 
         .run(["$rootScope", "$window", "linkManager", function ($scope, $window, linkManager) {
